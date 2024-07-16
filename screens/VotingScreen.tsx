@@ -12,12 +12,16 @@ import { randomString } from "@/utils/key";
 import Confetti from 'react-confetti'
 import Button from "@/components/Button";
 import { useWindowSize } from "react-use";
+import moment from "moment";
+import { formatCreatedAt } from "@/utils/time";
+import TimeAgo from "@/components/TimeAgo";
 
 export default function VotingScreen() {
     const [selected, setSelected] = useState<string>("")
     const [confetti, setConfetti] = useState(false)
     const [voting, setVoting] = useState<VotingProps>({
         id: randomString(32),
+        createdAt: Date.now(),
         title: "which fruit is better?",
         choices: [{
             id: randomString(32),
@@ -111,7 +115,7 @@ export default function VotingScreen() {
         <Container className="">
             <Card>
                 <div className="flex flex-col p-3 gap-2">
-                    <p className="text-zinc-500 text-[13px] -mb-3">created 3 sec ago</p>
+                    <TimeAgo createdAt={voting.createdAt} />
                     <div className="flex w-full flex-row justify-between items-center">
                         <h2 className="w-[90%]">{voting.title}</h2>
                         <button className="p-3 rounded-[3px] duration-200 cursor-pointer hover:bg-zinc-800">
