@@ -33,7 +33,7 @@ export default function HomeScreen() {
         
         switch (step) {
             case "init":
-                animateIn(steps.init, 2)
+                animateIn(steps.init, 1)
                 break;
             case "title":
                 console.log("[DEBUG] chamado dentro do useEffect")
