@@ -14,6 +14,7 @@ import TimeAgo from "@/components/TimeAgo";
 import Link from "next/link";
 import { nun } from "@/app/db";
 import { ChoiceProps } from "@/interfaces/ChoiceProps";
+import { animateInCopyURLNotification, animateOutCopyURLNotification, animateVotingScreenCard } from "@/app/animation";
 
 
 export default function VotingScreen({id}: {id: string}) {
@@ -22,6 +23,8 @@ export default function VotingScreen({id}: {id: string}) {
     const [ipAddress, setIpAddress] = useState<string>("")
     const [blocked, setBlocked] = useState(false)
     const [confetti, setConfetti] = useState(false)
+    const [copied, setCopied] = useState(false);
+  
     const [voting, setVoting] = useState<VotingProps>({
         id: randomString(32),
         createdAt: Date.now(),
@@ -76,44 +79,7 @@ export default function VotingScreen({id}: {id: string}) {
 
 
         // setting up document ids map for easy animation mapping
-        let card = {
-            self: document.getElementById("card"),
-            background: document.getElementById("cardbackground"),
-            content: document.getElementById("cardcontent"),
-        }
-
-        let tl = gsap.timeline()
-
-
-        // im newbie with gsap =/
-        tl.to(card.self, {
-            opacity: 1,
-            duration: 1
-        }, 0)
-
-        tl.to(card.content, {
-            y: "-20%",
-            opacity: 1,
-            duration: .6,
-        }, 0)
-
-        tl.to(card.background, {
-            y: "-20%",
-            opacity: 1,
-            duration: .6,
-        }, "-=1")
-        
-        tl.to(card.content, {
-            y: "0",
-            opacity: 1,
-            duration: 2,
-        })
-        
-        tl.to(card.background, {
-            y: "0",
-            opacity: 1,
-            duration: 2,
-        }, "-=2.3")
+        animateVotingScreenCard()
 
     }, [])
     
@@ -147,6 +113,16 @@ export default function VotingScreen({id}: {id: string}) {
         })
         return voted
     }
+
+    
+    const handleCopyToClipboard = () => {
+        navigator.clipboard.writeText(window.location.href)
+          .then(() => {
+            animateInCopyURLNotification()
+            setTimeout(() => animateOutCopyURLNotification(), 2000); // Reset copied state after 1.5 seconds
+          })
+          .catch(err => console.error('Failed to copy:', err));
+      };
 
     // this checkes with a given ip and list, cause its called while the data is getting fetched, so its just to makes it functional and sort
     const getChoiceVotedByUserFromHisIpAddress = (ip: string, votingFetch: VotingProps) => {
@@ -186,6 +162,7 @@ export default function VotingScreen({id}: {id: string}) {
     nun.watch(id,(value: any) => {
         if(value) {
             setBlocked(false)
+            // checking if the user already selected it in another browser and makes it realtime
             if (!selected) {
                 let possibleChoice = getChoiceVotedByUserFromHisIpAddress(ipAddress, value.value)
                 setSelected(possibleChoice.id)
@@ -203,13 +180,15 @@ export default function VotingScreen({id}: {id: string}) {
                 {blocked ? (
                     <Title>Voting not found &#128533;</Title>
                 ) : (
-                    <div className="flex flex-col p-3 gap-2">
+                    <div className="flex flex-col relative p-3 gap-2">
                         <TimeAgo createdAt={voting.createdAt} />
                         <div className="flex w-full flex-row justify-between items-center">
                             <h2 className="w-[90%]">{voting.title}</h2>
-                            <button className="p-3 rounded-[3px] duration-200 cursor-pointer hover:bg-zinc-800">
+                            <button onClick={handleCopyToClipboard} className="p-3 rounded-[3px] duration-200 cursor-pointer hover:bg-zinc-800">
                                 <BiLink />
-                            </button>
+                            </button>    
+                            <span id="copytext" className="ml-1 shadow-md opacity-0 text-[12px] bg-zinc-900 py-1 px-3 rounded-[2px] text-green-500 absolute top-0 left-1/2 -translate-x-1/2">copied!</span>
+                            
                         </div>
 
                         <div className="flex flex-row justify-between">
