@@ -66,7 +66,7 @@ export default function VotingScreen({id}: {id: string}) {
             }
 
             
-            // take the user's ip
+            // take the user's ip and already verifies if he alr voted
             fetch("https://api.ipify.org?format=json")
                 .then(response => response.json())
                 .then(data => {
