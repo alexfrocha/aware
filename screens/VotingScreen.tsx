@@ -9,10 +9,7 @@ import gsap from "gsap";
 import { VotingProps } from "@/interfaces/VotingProps";
 import { randomString } from "@/utils/key";
 import Confetti from 'react-confetti'
-import Button from "@/components/Button";
 import { useWindowSize } from "react-use";
-import moment from "moment";
-import { formatCreatedAt } from "@/utils/time";
 import TimeAgo from "@/components/TimeAgo";
 import Link from "next/link";
 import { nun } from "@/app/db";
@@ -54,27 +51,27 @@ export default function VotingScreen({id}: {id: string}) {
     
 
     useEffect(() => {
-
-            
         // get the initial data ov voting
         nun.getValue(id).then((value: any) => {
             if(value) {
                 setBlocked(false)
+
+                // take the user's ip and already verifies if he alr voted
+                fetch("https://api.ipify.org?format=json")
+                    .then(response => response.json())
+                    .then(data => {
+                        setIpAddress(data.ip)
+                        // check if the user already voted and 
+                        let choice: ChoiceProps = getChoiceVotedByUserFromHisIpAddress(data.ip, value)
+                        if(choice) setSelected(choice.id)
+                    })
+                    .catch(error => console.log(error))
+
                 setVoting(value)
             } else {
                 setBlocked(true)
             }
-
             
-            // take the user's ip and already verifies if he alr voted
-            fetch("https://api.ipify.org?format=json")
-                .then(response => response.json())
-                .then(data => {
-                    setIpAddress(data.ip)
-                    let choice: ChoiceProps = getChoiceVotedByUserFromHisIpAddress(data.ip, value)
-                    if(choice) setSelected(choice.id)
-                })
-                .catch(error => console.log(error))
         })
 
 
@@ -121,7 +118,6 @@ export default function VotingScreen({id}: {id: string}) {
     }, [])
     
     useEffect(() => {
-        console.log(selected)
         if (selected) {
             setConfetti(true)
             setTimeout(() => {
@@ -152,6 +148,7 @@ export default function VotingScreen({id}: {id: string}) {
         return voted
     }
 
+    // this checkes with a given ip and list, cause its called while the data is getting fetched, so its just to makes it functional and sort
     const getChoiceVotedByUserFromHisIpAddress = (ip: string, votingFetch: VotingProps) => {
         let possibleChoiceResult = {} as ChoiceProps;
         votingFetch.choices.forEach((choice: ChoiceProps) => {
@@ -164,12 +161,14 @@ export default function VotingScreen({id}: {id: string}) {
     }
 
 
-    // do the ip checker on votes list in choices
+    // do the ip checker on votes list inside each choice
     const handleChoose = (choiceId: string) => {
         const choiceIndex = voting.choices.findIndex(choice => choice.id === choiceId);
     
         if (choiceIndex !== -1) {
+            // checking if user voted already
             if(checkIfAlreadyVoted()) return;
+
             const updatedChoices = [...voting.choices];
     
             updatedChoices[choiceIndex] = {
@@ -183,11 +182,14 @@ export default function VotingScreen({id}: {id: string}) {
         }
     };
 
-    // watch the data on db for implement the realtime, man nun-db is crazy tbh, nice man
+    // watch the data on db for implement the realtime, man nun-db is fk crazy tbh, nice man, its like 2 block of code to implement a realtime data
     nun.watch(id,(value: any) => {
         if(value) {
             setBlocked(false)
-            console.log(value)
+            if (!selected) {
+                let possibleChoice = getChoiceVotedByUserFromHisIpAddress(ipAddress, value.value)
+                setSelected(possibleChoice.id)
+            }
             setVoting(value.value)
         } else {
             setBlocked(true)
