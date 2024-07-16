@@ -9,10 +9,13 @@ import { useEffect, useState } from "react";
 import gsap from "gsap";
 import { VotingProps } from "@/interfaces/VotingProps";
 import { randomString } from "@/utils/key";
+import Confetti from 'react-confetti'
 import Button from "@/components/Button";
+import { useWindowSize } from "react-use";
 
 export default function VotingScreen() {
     const [selected, setSelected] = useState<string>("")
+    const [confetti, setConfetti] = useState(false)
     const [voting, setVoting] = useState<VotingProps>({
         id: randomString(32),
         title: "which fruit is better?",
@@ -92,6 +95,17 @@ export default function VotingScreen() {
         return ((choiceVotes / getAllVotes()) * 100).toFixed(1)
     }
 
+    const {width, height} = useWindowSize()
+
+    useEffect(() => {
+        if (selected) {
+            setConfetti(true)
+            setTimeout(() => {
+                setConfetti(false)
+            }, 6000);
+        }
+    }, [selected])
+
 
     return (
         <Container className="">
@@ -115,8 +129,10 @@ export default function VotingScreen() {
                             </Choice>
                         ))}
                     </div>
+
                 </div>
             </Card>
+            {confetti && <Confetti numberOfPieces={20} tweenDuration={5}  width={width} height={height} />}
         </Container>
     )
 }
