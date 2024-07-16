@@ -8,7 +8,7 @@ import { randomString } from "@/utils/key";
 import { useState } from "react";
 
 const styles = {
-    inputBaseClassname: "bg-zinc-800/30 border w-full border-zinc-200/20 text-[13px] outline-none px-5 min-h-[30px] py-2 rounded-[3px]"
+    inputBaseClassname: "bg-zinc-800/30 border w-full text-[13px] outline-none px-5 min-h-[30px] py-2 rounded-[3px]"
 }
 
 export default function ChoicesStep({nextStep, choices, setChoices}: {nextStep: () => void, choices: ChoiceProps[], setChoices: React.Dispatch<React.SetStateAction<ChoiceProps[]>>}) {
@@ -32,7 +32,7 @@ export default function ChoicesStep({nextStep, choices, setChoices}: {nextStep: 
         let newChoiceData: ChoiceProps = {
             id: randomString(32),
             value: "",
-            votes: 0
+            votes: []
         }
         if(choices.length < 5) setChoices([...choices, newChoiceData])
     }

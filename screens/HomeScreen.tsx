@@ -1,6 +1,7 @@
 'use client'
 
 import { animateIn, animateOut } from "@/app/animation";
+import { nun } from "@/app/db";
 import Container from "@/components/Container";
 import ChoicesStep from "@/components/form/ChoicesStep";
 import FinishStep from "@/components/form/FinishStep";
@@ -18,7 +19,7 @@ export default function HomeScreen() {
         {
             id: randomString(32),
             value: "",
-            votes: 0
+            votes: []
         }
     ])
 
@@ -78,8 +79,13 @@ export default function HomeScreen() {
         let newVoting = {
             id: randomString(32),
             title,
-            choices
+            choices,
+            createdAt: Date.now()
         }
+        nun.setValue(newVoting.id, newVoting);
+        nun.getValue(newVoting.id).then((value: any) => {
+            console.log(value)
+        })
         router.push(`/voting/${newVoting.id}`)
     }
 
