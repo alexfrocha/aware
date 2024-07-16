@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function HomeScreen() {
-    const [step, setStep] = useState<string>("init");
+    const [step, setStep] = useState<string>("init")
     const [title, setTitle] = useState<string>("")
     const [choices, setChoices] = useState<ChoiceProps[]>([
         {
@@ -22,6 +22,7 @@ export default function HomeScreen() {
             votes: []
         }
     ])
+    const [processing, setProcessing] = useState<boolean>(false);
 
     useEffect(() => {
         let steps = {
@@ -82,11 +83,11 @@ export default function HomeScreen() {
             choices,
             createdAt: Date.now()
         }
+        // block the user of creating more than one voting
+        if(processing) return;
         nun.setValue(newVoting.id, newVoting);
-        nun.getValue(newVoting.id).then((value: any) => {
-            console.log(value)
-        })
         router.push(`/voting/${newVoting.id}`)
+        setProcessing(false);
     }
 
     return (
