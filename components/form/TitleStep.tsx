@@ -17,7 +17,7 @@ export default function TitleStep({nextStep, title, setTitle}: {nextStep: () => 
     return (
         <Step id="titlestep" className="z-[9]">        
             <Title>how we gon call it?</Title>
-            <Input value={title} onChange={(e: any) => setTitle(e.target.value)} id="titleinput" className={`w-[80%] duration-300 text-center mb-2 md:w-[40%] md:text-[42px] border-b bg-none outline-none bg-black ${!title && missingTitle ? "border-b-red-500" : "border-b-zinc-300"}`} />
+            <Input value={title} onChange={(e: any) => setTitle(e.target.value)} id="titleinput" className={`w-[80%] pb-3 md:pb-0 duration-300 text-center mb-2 md:w-[40%] md:text-[42px] border-b bg-none outline-none bg-black ${!title && missingTitle ? "border-b-red-500" : "border-b-zinc-300"}`} />
             <Button onClick={handleNext}>
                 that&#39;s good &#128077;
             </Button>

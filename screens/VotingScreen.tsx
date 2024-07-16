@@ -9,14 +9,12 @@ import gsap from "gsap";
 import { VotingProps } from "@/interfaces/VotingProps";
 import { randomString } from "@/utils/key";
 import Confetti from 'react-confetti'
-import Button from "@/components/Button";
 import { useWindowSize } from "react-use";
-import moment from "moment";
-import { formatCreatedAt } from "@/utils/time";
 import TimeAgo from "@/components/TimeAgo";
 import Link from "next/link";
 import { nun } from "@/app/db";
 import { ChoiceProps } from "@/interfaces/ChoiceProps";
+import { animateInCopyURLNotification, animateOutCopyURLNotification, animateVotingScreenCard } from "@/app/animation";
 
 
 export default function VotingScreen({id}: {id: string}) {
@@ -25,6 +23,8 @@ export default function VotingScreen({id}: {id: string}) {
     const [ipAddress, setIpAddress] = useState<string>("")
     const [blocked, setBlocked] = useState(false)
     const [confetti, setConfetti] = useState(false)
+    const [copied, setCopied] = useState(false);
+  
     const [voting, setVoting] = useState<VotingProps>({
         id: randomString(32),
         createdAt: Date.now(),
@@ -54,74 +54,36 @@ export default function VotingScreen({id}: {id: string}) {
     
 
     useEffect(() => {
-
-            
         // get the initial data ov voting
         nun.getValue(id).then((value: any) => {
             if(value) {
                 setBlocked(false)
+
+                // take the user's ip and already verifies if he alr voted
+                fetch("https://api.ipify.org?format=json")
+                    .then(response => response.json())
+                    .then(data => {
+                        setIpAddress(data.ip)
+                        // check if the user already voted and 
+                        let choice: ChoiceProps = getChoiceVotedByUserFromHisIpAddress(data.ip, value)
+                        if(choice) setSelected(choice.id)
+                    })
+                    .catch(error => console.log(error))
+
                 setVoting(value)
             } else {
                 setBlocked(true)
             }
-
             
-            // take the user's ip and already verifies if he alr voted
-            fetch("https://api.ipify.org?format=json")
-                .then(response => response.json())
-                .then(data => {
-                    setIpAddress(data.ip)
-                    let choice: ChoiceProps = getChoiceVotedByUserFromHisIpAddress(data.ip, value)
-                    if(choice) setSelected(choice.id)
-                })
-                .catch(error => console.log(error))
         })
 
 
         // setting up document ids map for easy animation mapping
-        let card = {
-            self: document.getElementById("card"),
-            background: document.getElementById("cardbackground"),
-            content: document.getElementById("cardcontent"),
-        }
-
-        let tl = gsap.timeline()
-
-
-        // im newbie with gsap =/
-        tl.to(card.self, {
-            opacity: 1,
-            duration: 1
-        }, 0)
-
-        tl.to(card.content, {
-            y: "-20%",
-            opacity: 1,
-            duration: .6,
-        }, 0)
-
-        tl.to(card.background, {
-            y: "-20%",
-            opacity: 1,
-            duration: .6,
-        }, "-=1")
-        
-        tl.to(card.content, {
-            y: "0",
-            opacity: 1,
-            duration: 2,
-        })
-        
-        tl.to(card.background, {
-            y: "0",
-            opacity: 1,
-            duration: 2,
-        }, "-=2.3")
+        animateVotingScreenCard()
 
     }, [])
     
     useEffect(() => {
-        console.log(selected)
         if (selected) {
             setConfetti(true)
             setTimeout(() => {
@@ -152,6 +114,17 @@ export default function VotingScreen({id}: {id: string}) {
         return voted
     }
 
+    
+    const handleCopyToClipboard = () => {
+        navigator.clipboard.writeText(window.location.href)
+          .then(() => {
+            animateInCopyURLNotification()
+            setTimeout(() => animateOutCopyURLNotification(), 2000); // Reset copied state after 1.5 seconds
+          })
+          .catch(err => console.error('Failed to copy:', err));
+      };
+
+    // this checkes with a given ip and list, cause its called while the data is getting fetched, so its just to makes it functional and sort
     const getChoiceVotedByUserFromHisIpAddress = (ip: string, votingFetch: VotingProps) => {
         let possibleChoiceResult = {} as ChoiceProps;
         votingFetch.choices.forEach((choice: ChoiceProps) => {
@@ -164,12 +137,14 @@ export default function VotingScreen({id}: {id: string}) {
     }
 
 
-    // do the ip checker on votes list in choices
+    // do the ip checker on votes list inside each choice
     const handleChoose = (choiceId: string) => {
         const choiceIndex = voting.choices.findIndex(choice => choice.id === choiceId);
     
         if (choiceIndex !== -1) {
+            // checking if user voted already
             if(checkIfAlreadyVoted()) return;
+
             const updatedChoices = [...voting.choices];
     
             updatedChoices[choiceIndex] = {
@@ -183,11 +158,15 @@ export default function VotingScreen({id}: {id: string}) {
         }
     };
 
-    // watch the data on db for implement the realtime, man nun-db is crazy tbh, nice man
+    // watch the data on db for implement the realtime, man nun-db is fk crazy tbh, nice man, its like 2 block of code to implement a realtime data
     nun.watch(id,(value: any) => {
         if(value) {
             setBlocked(false)
-            console.log(value)
+            // checking if the user already selected it in another browser and makes it realtime
+            if (!selected) {
+                let possibleChoice = getChoiceVotedByUserFromHisIpAddress(ipAddress, value.value)
+                setSelected(possibleChoice.id)
+            }
             setVoting(value.value)
         } else {
             setBlocked(true)
@@ -201,13 +180,15 @@ export default function VotingScreen({id}: {id: string}) {
                 {blocked ? (
                     <Title>Voting not found &#128533;</Title>
                 ) : (
-                    <div className="flex flex-col p-3 gap-2">
+                    <div className="flex flex-col relative p-3 gap-2">
                         <TimeAgo createdAt={voting.createdAt} />
                         <div className="flex w-full flex-row justify-between items-center">
                             <h2 className="w-[90%]">{voting.title}</h2>
-                            <button className="p-3 rounded-[3px] duration-200 cursor-pointer hover:bg-zinc-800">
+                            <button onClick={handleCopyToClipboard} className="p-3 rounded-[3px] duration-200 cursor-pointer hover:bg-zinc-800">
                                 <BiLink />
-                            </button>
+                            </button>    
+                            <span id="copytext" className="ml-1 shadow-md opacity-0 text-[12px] bg-zinc-900 py-1 px-3 rounded-[2px] text-green-500 absolute top-0 left-1/2 -translate-x-1/2">copied!</span>
+                            
                         </div>
 
                         <div className="flex flex-row justify-between">
