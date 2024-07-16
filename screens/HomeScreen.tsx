@@ -1,17 +1,26 @@
 'use client'
 
 import { animateIn, animateOut } from "@/app/animation";
-import Button from "@/components/Button";
 import Container from "@/components/Container";
 import ChoicesStep from "@/components/form/ChoicesStep";
 import FinishStep from "@/components/form/FinishStep";
 import InitStep from "@/components/form/InitStep";
 import TitleStep from "@/components/form/TitleStep";
-import gsap from "gsap";
+import { ChoiceProps } from "@/interfaces/ChoiceProps";
+import { randomString } from "@/utils/key";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function HomeScreen() {
     const [step, setStep] = useState<string>("init");
+    const [title, setTitle] = useState<string>("")
+    const [choices, setChoices] = useState<ChoiceProps[]>([
+        {
+            id: randomString(32),
+            value: "",
+            votes: 0
+        }
+    ])
 
     useEffect(() => {
         let steps = {
@@ -46,13 +55,15 @@ export default function HomeScreen() {
 
     }, [step])
 
+    const router = useRouter()
+
     function nextStep() {
         switch (step) {
             case "init":
                 setStep("title");
+                document.getElementById("titleinput")?.focus()
                 break;
             case "title":
-                console.log("[DEBUG] chamado dentro do nextstep")
                 setStep("choices");
                 break;
             case "choices":
@@ -61,16 +72,23 @@ export default function HomeScreen() {
             default:
                 break;
         }
-        
     }
 
+    function handleFinishAndCreateVoting() {
+        let newVoting = {
+            id: randomString(32),
+            title,
+            choices
+        }
+        router.push(`/voting/${newVoting.id}`)
+    }
 
     return (
         <Container>
             <InitStep nextStep={nextStep} />
-            <TitleStep nextStep={nextStep} />
-            <ChoicesStep nextStep={nextStep} />
-            <FinishStep nextStep={nextStep} />
+            <TitleStep title={title} setTitle={setTitle} nextStep={nextStep} />
+            <ChoicesStep choices={choices} setChoices={setChoices} nextStep={nextStep} />
+            <FinishStep handleFinishAndCreateVoting={handleFinishAndCreateVoting} />
         </Container>
     )
 }

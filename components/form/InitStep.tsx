@@ -8,7 +8,7 @@ import Step from "../Step";
 export default function InitStep({nextStep}: {nextStep: () => void}) {
 
     return (
-        <Step id="initstep">        
+        <Step id="initstep" className="z-[10]">        
             <Title>be aware of &#39;em</Title>
             <Button onClick={nextStep}>
                 let&#39;s kick it &#127881;

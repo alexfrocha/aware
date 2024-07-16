@@ -4,6 +4,6 @@ export default function Button({children, onClick}: {children: ReactNode, onClic
     return (
         <button onClick={() => {
             if (onClick) onClick()
-        }} className="px-4 py-2 md:mt-0 mt-3 duration-200 text-[10px] md:text-[13px] hover:bg-white hover:text-black border border-white rounded-[5px] w-fit">{children}</button>
+        }} className="px-4 py-2 duration-200 text-[10px] md:text-[13px] hover:bg-white hover:text-black border border-white rounded-[5px] w-fit">{children}</button>
     )
 }
