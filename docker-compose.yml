@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  nun-db:
+    image: "mateusfreira/nun-db"
+    ports:
+      - "3012:3012" # Web socket
+      - "3013:3013" # Http
+      - "3014:3014" # Socket
+    environment:
+      - NUN_DBS_DIR=/nun_data 
+      - NUN_USER=mateus
+      - NUN_PWD=mateus
+      - DB_NAME=nun_data
+      - DB_TOKEN=mateus
+    volumes:
+      - /tmp/data/nun_db/:/nun_data
+
+  nextjs:
+    build:
+      context: ./
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production 
+    depends_on:
+      - nun-db

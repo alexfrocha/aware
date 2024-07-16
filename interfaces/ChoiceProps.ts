@@ -1,5 +1,5 @@
 export interface ChoiceProps {
     id: string,
     value: string,
-    votes: number
+    votes: string[]
 }
