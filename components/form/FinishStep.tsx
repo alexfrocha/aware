@@ -3,7 +3,6 @@ import Step from "../Step";
 import Title from "../Title";
 
 export default function FinishStep({handleFinishAndCreateVoting}: {handleFinishAndCreateVoting: () => void}) {
-
     return (
         <Step id="finishstep" className="z-[7]">        
             <Title>sure?</Title>
